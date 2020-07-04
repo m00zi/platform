@@ -3,7 +3,6 @@ import { ComponentStore } from '../src';
 import {
   TestBed,
   ComponentFixture,
-  flushMicrotasks,
   fakeAsync,
   tick,
 } from '@angular/core/testing';
@@ -26,7 +25,6 @@ describe('ComponentStore integration', () => {
       expect(state.hasChild()).toBe(true);
 
       state.fixture.detectChanges();
-      flushMicrotasks();
 
       // No values emitted,             👇 no initial state
       expect(state.propChanges).toEqual([]);
@@ -35,7 +33,6 @@ describe('ComponentStore integration', () => {
 
     it('gets initial value when state is initialized', fakeAsync(() => {
       state.child.init();
-      flushMicrotasks();
       //                            init state👇
       expect(state.propChanges).toEqual(['initial Value']);
       expect(state.prop2Changes).toEqual([undefined]);
@@ -59,12 +56,26 @@ describe('ComponentStore integration', () => {
       state!.child.init();
 
       state!.child.updateProp('new value');
-      flushMicrotasks();
       state!.child.updateProp('yay!!!');
-      flushMicrotasks();
 
       expect(state!.propChanges).toContain('new value');
       expect(state!.propChanges).toContain('yay!!!');
+
+      // clear "Periodic timers in queue"
+      state.destroy();
+    }));
+
+    it('emits both values when the same property is updated immediately', fakeAsync(() => {
+      state!.child.init();
+
+      state!.child.updateProp('new value'); // no flushing in between
+      state!.child.updateProp('yay!!!');
+
+      expect(state!.propChanges).toEqual([
+        'initial Value',
+        'new value',
+        'yay!!!',
+      ]);
 
       // clear "Periodic timers in queue"
       state.destroy();

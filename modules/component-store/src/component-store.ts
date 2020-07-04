@@ -99,7 +99,7 @@ export class ComponentStore<T extends object> implements OnDestroy {
                 )
               : // If state was not initialized, we'll throw an error.
                 throwError(
-                  Error(`${this.constructor.name} has not been initialized`)
+                  new Error(`${this.constructor.name} has not been initialized`)
                 )
           ),
           takeUntil(this.destroy$)
@@ -129,8 +129,10 @@ export class ComponentStore<T extends object> implements OnDestroy {
    * state.
    */
   private initState(state: T): void {
-    this.isInitialized = true;
-    this.stateSubject$.next(state);
+    scheduled([state], queueScheduler).subscribe((s) => {
+      this.isInitialized = true;
+      this.stateSubject$.next(s);
+    });
   }
 
   /**
@@ -181,7 +183,7 @@ export class ComponentStore<T extends object> implements OnDestroy {
     const projector: (...args: any[]) => R = args.pop();
     if (args.length === 0) {
       // If projector was the only argument then we'll use map operator.
-      observable$ = this.stateSubject$.pipe(debounceSync(), map(projector));
+      observable$ = this.stateSubject$.pipe(map(projector));
     } else {
       // If there are multiple arguments, we're chaining selectors, so we need
       // to take the combineLatest of them before calling the map function.

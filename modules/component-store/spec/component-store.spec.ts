@@ -264,7 +264,7 @@ describe('Component Store', () => {
     );
 
     it(
-      'with latest value within the same microtask',
+      'with multiple values within the same microtask',
       marbles((m) => {
         const UPDATED: Partial<State> = { updated: true };
         const UPDATE_VALUE: Partial<State> = { value: 'updated' };
@@ -289,8 +289,7 @@ describe('Component Store', () => {
 
         expect(results).toEqual([
           { value: 'init' },
-          // Notice there is no "intermediary" value of
-          // {value: 'init', updated: true,},
+          { value: 'init', updated: true },
           {
             value: 'updated',
             updated: true,
@@ -552,11 +551,11 @@ describe('Component Store', () => {
 
         const observable$ = m.hot('      1-2---3', observableValues);
         const updater$ = m.cold('        a--b--c|');
-        const expectedSelector$ = m.hot('v-wx--(yz)-', {
-          v: 'one a',
-          w: 'two a',
-          x: 'two b',
-          y: 'three b', // 👈 different scheduler then 'select'
+        const expectedSelector$ = m.hot('w-xy--z-', {
+          w: 'one a',
+          x: 'two a',
+          y: 'two b',
+          // 'three b', // 👈 updater on queueScheduler
           z: 'three c',
         });
 
@@ -654,11 +653,10 @@ describe('Component Store', () => {
 
         const observable$ = m.hot('      1-2---3', observableValues);
         const updater$ = m.cold('        a--b--c|');
-        const expectedSelector$ = m.hot('v-wx--(yz)-', {
-          v: 'one a',
-          w: 'two a',
-          x: 'two b',
-          y: 'three b', // 👈 different scheduler then 'select'
+        const expectedSelector$ = m.hot('w-xy--z-', {
+          w: 'one a',
+          x: 'two a',
+          y: 'two b',
           z: 'three c',
         });
 
